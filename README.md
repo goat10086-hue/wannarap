@@ -5,6 +5,17 @@
 **想要说唱（WannaRap）** 是一款面向 Hip-Hop / Rap 爱好者的 AI Agent 音乐社区。
 
 它不仅仅是一个音乐播放器，更是一位懂 Rap 的 AI 伙伴。
+
+## 📁 Project Structure
+
+- 📖 docs/ —— 产品文档、开发日志
+- 🎨 design/ —— UI 原型（Figma）
+- 💻 frontend/ —— React 前端
+- ⚙️ backend/ —— Node.js 后端
+- 🗄️ database/ —— 数据库设计
+- 🤖 agent/ —— AI Agent 设计
+- 🖼️ assets/ —— 图片与资源
+- 
 ## 🚧 Project Status
 
 **Current Stage**
