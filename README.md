@@ -8,7 +8,7 @@
 
 用户可以在这里：
 
-- 🎧 听 Rap
+- 🎧 听 Rap,了解rap背后的故事
 - 🤖 与 AI Agent 聊天
 - ✍️ AI 辅助写词
 - 🎤 练习 Freestyle
