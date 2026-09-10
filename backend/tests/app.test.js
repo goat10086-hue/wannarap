@@ -234,11 +234,16 @@ test("practice validates durations and persists profile totals", async (t) => {
 test("AI outage is explicit and does not persist a fabricated reply", async (t) => {
   const { client } = await setup(t, {
       apiKey: "test-key",
+      provider: "deepseek",
+      model: "deepseek-flash",
+      apiBaseUrl: "https://api.deepseek.com",
       fetchImpl: async () => new Response("{}", { status: 503 }),
     }),
     c = client();
   await c("/auth/register", "POST", account);
-  assert.equal((await c("/chat", "POST", { message: "hello" })).status, 502);
+  const failed = await c("/chat", "POST", { message: "hello" });
+  assert.equal(failed.status, 502);
+  assert.match(failed.body.error, /DeepSeek.*HTTP 503/);
   assert.equal((await c("/chat")).body.messages.length, 0);
 });
 test("live AI uses server-owned history and excludes key from response", async (t) => {

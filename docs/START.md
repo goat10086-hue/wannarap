@@ -36,14 +36,27 @@ npm start
 Copy-Item .env.example .env
 ```
 
-在 `.env` 中填写：
+DeepSeek 配置：
 
 ```dotenv
-OPENAI_API_KEY=你自己的API密钥
-OPENAI_MODEL=gpt-4.1-mini
+AI_PROVIDER=deepseek
+AI_API_KEY=你新创建的DeepSeek密钥
+AI_MODEL=deepseek-flash
+AI_BASE_URL=https://api.deepseek.com
 ```
 
-模型可以改为你的账号可调用且支持 Responses API 的模型。重启服务后，页面显示「AI 已配置」。该状态表示已配置密钥；实际服务是否可用以请求结果为准。密钥只由后端读取，不要加 VITE_ 前缀，也不要提交 `.env`。
+当前版本也兼容旧的 `OPENAI_API_KEY` / `OPENAI_MODEL` 名称，并会根据 `deepseek-` 模型名自动选择 DeepSeek 地址。建议统一使用上面的 `AI_*` 名称，减少混淆。
+
+如需改回 OpenAI：
+
+```dotenv
+AI_PROVIDER=openai
+AI_API_KEY=你自己的OpenAI密钥
+AI_MODEL=gpt-4.1-mini
+AI_BASE_URL=https://api.openai.com/v1
+```
+
+模型必须是账号可调用且支持 Responses API 的模型。重启服务后，页面会显示「DeepSeek 已配置」或「AI 已配置」。密钥只由后端读取，不要加 `VITE_` 前缀，不要提交 `.env`，也不要在截图中显示密钥。
 
 未配置密钥也能运行所有非 AI 功能；聊天和写词明确显示「演示模式」并返回固定练习模板。真实请求失败会显示错误，不会伪造模型回复。
 

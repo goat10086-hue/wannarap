@@ -18,6 +18,8 @@ const scrypt = promisify(scryptCallback),
   now = () => new Date().toISOString();
 const text = (n) => z.string().trim().min(1, "请填写内容").max(n, "内容太长");
 const hashToken = (t) => createHash("sha256").update(t).digest("hex");
+const firstNonEmpty = (...values) =>
+  values.find((value) => typeof value === "string" && value.trim())?.trim();
 function fail(status, message) {
   return Object.assign(new Error(message), { status });
 }
@@ -29,8 +31,28 @@ export function createApp(options = {}) {
   );
   const app = express();
   app.disable("x-powered-by");
-  const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY,
-    model = options.model || process.env.OPENAI_MODEL || "gpt-4.1-mini";
+  const model =
+      options.model ||
+      firstNonEmpty(process.env.AI_MODEL, process.env.OPENAI_MODEL) ||
+      "gpt-4.1-mini",
+    provider =
+      options.provider ||
+      firstNonEmpty(process.env.AI_PROVIDER) ||
+      (model.toLowerCase().startsWith("deepseek") ? "deepseek" : "openai"),
+    apiKey =
+      options.apiKey !== undefined
+        ? options.apiKey
+        : firstNonEmpty(
+            process.env.AI_API_KEY,
+            process.env.DEEPSEEK_API_KEY,
+            process.env.OPENAI_API_KEY,
+          ),
+    apiBaseUrl =
+      options.apiBaseUrl ||
+      firstNonEmpty(process.env.AI_BASE_URL, process.env.OPENAI_BASE_URL) ||
+      (provider === "deepseek"
+        ? "https://api.deepseek.com"
+        : "https://api.openai.com/v1");
   const secure = process.env.COOKIE_SECURE === "true";
   app.use((req, res, next) => {
     res.set({
@@ -106,7 +128,12 @@ export function createApp(options = {}) {
     });
   };
   app.get("/api/health", (req, res) =>
-    res.json({ ok: true, aiMode: apiKey ? "live" : "demo" }),
+    res.json({
+      ok: true,
+      aiMode: apiKey ? "live" : "demo",
+      aiProvider: provider,
+      aiModel: model,
+    }),
   );
   app.get("/api/auth/me", (req, res) => res.json({ user: req.user || null }));
   app.post("/api/auth/register", limit("auth", 10), async (req, res) => {
@@ -245,10 +272,13 @@ export function createApp(options = {}) {
           mode,
           apiKey,
           model,
+          apiBaseUrl,
+          provider,
           fetchImpl: options.fetchImpl,
         });
-      } catch {
-        throw fail(502, "模型服务暂时不可用，请检查密钥、模型权限或稍后重试。");
+      } catch (error) {
+        console.error(`AI request failed (${provider}/${model}):`, error.message);
+        throw fail(502, error.message);
       }
       if (mode === "chat") {
         db.exec("BEGIN");

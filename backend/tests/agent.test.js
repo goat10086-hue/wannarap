@@ -41,3 +41,38 @@ test("response parser collects text after reasoning and rejects empty output", a
     /未返回文本/,
   );
 });
+test("DeepSeek requests use its Responses API endpoint", async () => {
+  let requestedUrl;
+  const reply = await generateReply({
+    apiKey: "test-key",
+    model: "deepseek-flash",
+    provider: "deepseek",
+    apiBaseUrl: "https://api.deepseek.com",
+    messages: [{ role: "user", content: "给我一个练习建议" }],
+    fetchImpl: async (url) => {
+      requestedUrl = String(url);
+      return Response.json({
+        output: [
+          {
+            content: [{ type: "output_text", text: "先写四个小节。" }],
+          },
+        ],
+      });
+    },
+  });
+  assert.equal(requestedUrl, "https://api.deepseek.com/responses");
+  assert.equal(reply.mode, "live");
+});
+test("DeepSeek authentication failures give an actionable message", async () => {
+  await assert.rejects(
+    generateReply({
+      apiKey: "expired-key",
+      model: "deepseek-flash",
+      provider: "deepseek",
+      apiBaseUrl: "https://api.deepseek.com",
+      messages: [{ role: "user", content: "hello" }],
+      fetchImpl: async () => new Response("{}", { status: 401 }),
+    }),
+    /DeepSeek：API 密钥无效或已过期（HTTP 401）/,
+  );
+});

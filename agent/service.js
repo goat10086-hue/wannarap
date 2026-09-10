@@ -12,11 +12,21 @@ export async function generateReply({
   mode = "chat",
   apiKey,
   model,
+  apiBaseUrl = "https://api.openai.com/v1",
+  provider = "openai",
   fetchImpl = fetch,
 }) {
   if (!apiKey)
     return { content: demoReply(messages.at(-1).content, mode), mode: "demo" };
-  const response = await fetchImpl("https://api.openai.com/v1/responses", {
+  let endpoint;
+  try {
+    endpoint = new URL(`${apiBaseUrl.replace(/\/+$/, "")}/responses`);
+    if (!["https:", "http:"].includes(endpoint.protocol))
+      throw new Error("unsupported protocol");
+  } catch {
+    throw new Error("模型接口地址无效，请检查 AI_BASE_URL。");
+  }
+  const response = await fetchImpl(endpoint, {
     method: "POST",
     signal: AbortSignal.timeout(45000),
     headers: {
@@ -31,10 +41,22 @@ export async function generateReply({
       input: messages.map(({ role, content }) => ({ role, content })),
     }),
   });
-  if (!response.ok)
-    throw new Error(
-      "模型服务暂时不可用，请检查服务端密钥、模型权限或稍后重试。",
-    );
+  if (!response.ok) {
+    const service = provider === "deepseek" ? "DeepSeek" : "模型服务";
+    const reason =
+      response.status === 401
+        ? "API 密钥无效或已过期"
+        : response.status === 402
+          ? "账户余额不足"
+          : response.status === 403
+            ? "当前账号无权调用该模型"
+            : response.status === 404
+              ? "接口地址或模型名称不正确"
+              : response.status === 429
+                ? "请求过于频繁，请稍后重试"
+                : "服务暂时不可用，请稍后重试";
+    throw new Error(`${service}：${reason}（HTTP ${response.status}）`);
+  }
   const body = await response.json();
   const content = body.output
     ?.flatMap((item) => item.content ?? [])

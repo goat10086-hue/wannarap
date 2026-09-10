@@ -1,12 +1,12 @@
 # MVP 验证结果
 
-验证环境：Windows，Node.js v22.17.0，npm 10.9.2。日期：2026-09-08。
+验证环境：Windows，Node.js v22.17.0，npm 10.9.2。日期：2026-09-10。
 
 ## 已通过
 
 - TypeScript 严格类型检查：`npm run check`。
 - 生产构建：`npm run build`。
-- Node 测试：12 项通过，0 项失败（`node --test backend/tests/*.test.js`，与 `npm test` 执行内容相同）。
+- Node 测试：14 项通过，0 项失败（`node --test backend/tests/*.test.js`，与 `npm test` 执行内容相同）。
 - npm 安装审计结果：162 个包，0 个已报告漏洞。
 - `npm start` 实际启动；首页、健康检查和歌曲接口 HTTP 200。
 - `npm run dev` 实际启动；前端构建监听与后端监听都运行，源码修改触发成功重建。
@@ -26,6 +26,8 @@
 10. 模型只收到服务端历史，密钥不出现在 API 响应。
 11. 登录请求限流。
 12. SQLite 关闭后重新打开，数据仍保留。
+13. DeepSeek 请求使用其 Responses API 地址并正确解析结果。
+14. DeepSeek 鉴权和服务故障返回可操作的错误信息。
 
 ## 验证边界
 

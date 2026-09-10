@@ -37,7 +37,8 @@ function App() {
   const [page, commitPage] = useState<Page>("discover"),
     [user, setUser] = useState<User | null>(null),
     [ready, setReady] = useState(false),
-    [aiMode, setAiMode] = useState("demo");
+    [aiMode, setAiMode] = useState("demo"),
+    [aiProvider, setAiProvider] = useState("openai");
   const [login, setLogin] = useState(false),
     [notice, setNotice] = useState("");
   const leaveGuard = useRef<() => boolean>(() => true);
@@ -51,11 +52,12 @@ function App() {
   useEffect(() => {
     Promise.all([
       api<{ user: User | null }>("/auth/me"),
-      api<{ aiMode: string }>("/health"),
+      api<{ aiMode: string; aiProvider: string }>("/health"),
     ])
       .then(([a, b]) => {
         setUser(a.user);
         setAiMode(b.aiMode);
+        setAiProvider(b.aiProvider);
       })
       .catch((e) => setNotice(e.message))
       .finally(() => setReady(true));
@@ -151,7 +153,9 @@ function App() {
           </span>
           <button className="status-pill" onClick={() => setPage("chat")}>
             <span className="status-dot" />
-            {aiMode === "live" ? "AI 已配置" : "AI 演示模式"}
+            {aiMode === "live"
+              ? `${aiProvider === "deepseek" ? "DeepSeek" : "AI"} 已配置`
+              : "AI 演示模式"}
           </button>
         </header>
         <main key={`${page}-${user?.id || "guest"}`}>
